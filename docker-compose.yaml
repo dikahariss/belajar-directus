@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgis/postgis:13-master
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: directus
+      POSTGRES_USER: directus
+      POSTGRES_PASSWORD: directuspassword
+    networks:
+      - directus
+
+  cache:
+    image: redis:7
+    volumes:
+      - cache_data:/data
+    networks:
+      - directus
+
+  directus:
+    image: directus/directus:10.8.3
+    environment:
+      DB_CLIENT: pg
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: directus
+      DB_USER: directus
+      DB_PASSWORD: directuspassword
+      KEY: "255d861b-5ea1-5996-9aa3-922530ec40b1"
+      SECRET: "6116487b-cda1-52c2-b5b5-c8022c45e263"
+      CACHE_ENABLED: true
+      CACHE_STORE: redis
+      REDIS: "redis://cache:6379"
+    volumes:
+      - directus_data:/directus/uploads
+    ports:
+      - "8055:8055"
+    depends_on:
+      - cache
+      - postgres
+    networks:
+      - directus
+
+networks:
+  directus:
+    driver: bridge
+
+volumes:
+  directus_data:
+  postgres_data:
+  cache_data:
